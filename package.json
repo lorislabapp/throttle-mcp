@@ -1,0 +1,34 @@
+{
+  "name": "@lorislab/throttle-mcp",
+  "version": "0.1.0",
+  "description": "Throttle MCP — audit your Claude Code config (CLAUDE.md, settings.json, hooks) via MCP. Free, local, no telemetry.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "throttle-mcp": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test --test-concurrency=1 tests/**/*.test.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": ["mcp", "model-context-protocol", "claude-code", "audit", "anthropic", "throttle", "lorislab"],
+  "author": "LorisLabs <support@lorislab.fr>",
+  "license": "MIT",
+  "homepage": "https://lorislab.fr/throttle-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lorislabapp/throttle-mcp.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^3.24.0"
+  }
+}
