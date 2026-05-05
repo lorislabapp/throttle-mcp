@@ -47,3 +47,17 @@ test("audit_hooks accepts a directory under home and lists *.sh files only", asy
     assert.deepEqual(out.scanned.hooks_present.sort(), ["session-start-router.sh"]);
   });
 });
+
+test("audit_hooks rejects a symlink under ~/ that points outside home", async () => {
+  // Final-review finding: without realpath, a ~/link-to-/etc would
+  // happily enumerate /etc/*.sh. Confirm the realpath check catches it.
+  const link = path.join(os.homedir(), `.tmcp-hooks-link-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  await fs.symlink("/etc", link);
+  try {
+    const out = await auditHooksTool({ dir: link });
+    assert.equal(out.error, "outside_home");
+    assert.equal(out.scanned, undefined);
+  } finally {
+    await fs.unlink(link);
+  }
+});
