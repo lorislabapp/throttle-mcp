@@ -15,7 +15,7 @@ export default {
       severity: "high",
       category: "security",
       title: "Unrestricted Bash permission",
-      quote: 'permissions.allow contains "Bash(*)"',
+      quote: "Bash(*)",
       message:
         "Bash(*) lets the model run any shell command. A prompt injection in any file the model reads can pivot to data exfiltration or arbitrary writes. Scope to specific binaries instead.",
       fix_hint:

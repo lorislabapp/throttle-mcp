@@ -26,7 +26,7 @@ test("bash_wildcard fires when permissions.allow contains Bash(*)", async () => 
   assert.equal(f.rule_id, "bash_wildcard");
   assert.equal(f.severity, "high");
   assert.equal(f.mac_app_can_fix, true);
-  assert.match(f.quote, /Bash\(\*\)/);
+  assert.equal(f.quote, "Bash(*)");
 });
 
 test("bash_wildcard does not fire on a clean settings.json", async () => {
