@@ -123,3 +123,23 @@ test("safeReadFile rejects symlinks pointing outside home", async () => {
     await fs.unlink(inside);
   }
 });
+
+test("safeReadFile rejects symlinks pointing into a credential path", async () => {
+  // Create a benign target inside ~/.ssh/ so the symlink resolves to a
+  // path the credential deny-list flags, without needing a real key
+  // file. Tests the post-realpath isCredentialPath() — the load-bearing
+  // line that defends against symlink-into-credentials attacks.
+  const sshDir = path.join(os.homedir(), ".ssh");
+  await fs.mkdir(sshDir, { recursive: true });
+  const target = path.join(sshDir, `.throttle-mcp-fake-key-${Date.now()}`);
+  const link = path.join(os.homedir(), `.throttle-mcp-credlink-${Date.now()}`);
+  await fs.writeFile(target, "not a real key");
+  await fs.symlink(target, link);
+  try {
+    const r = await safeReadFile(link);
+    assert.equal(r.error, "credential_path_denied");
+  } finally {
+    await fs.unlink(link);
+    await fs.unlink(target);
+  }
+});
