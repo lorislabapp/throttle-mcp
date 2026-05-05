@@ -85,6 +85,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   }))
 }));
 
+// Tool-output convention: the dispatcher treats a top-level `error`
+// key as a tool-level failure (sets `isError: true` so MCP hosts can
+// render it distinctly from a successful response). NONE of the
+// success shapes returned by the 5 handlers contain a top-level
+// `error` field — adding one to a future success response would
+// silently flip the host into error state. If a tool ever needs an
+// `error`-shaped success, switch to throwing for hard failures and
+// dropping this heuristic.
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const tool = TOOLS.find(t => t.name === request.params.name);
   if (!tool) {
@@ -117,6 +125,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
-console.error("[throttle-mcp] ready (stdio)");
+// Top-level error trap: a transport failure (e.g. EPIPE before init)
+// otherwise surfaces as an opaque unhandled-rejection stack trace
+// that gives operators no signal in Claude Desktop's MCP logs.
+try {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("[throttle-mcp] ready (stdio)");
+} catch (err) {
+  console.error("[throttle-mcp] failed to start:", err);
+  process.exit(1);
+}
