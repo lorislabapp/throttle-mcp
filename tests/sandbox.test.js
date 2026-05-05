@@ -54,3 +54,72 @@ test("isCredentialPath does NOT flag normal files", () => {
   assert.equal(isCredentialPath(path.join(home, ".claude", "settings.json")), false);
   assert.equal(isCredentialPath(path.join(home, "GitHub", "Throttle", "CLAUDE.md")), false);
 });
+
+import fs from "node:fs/promises";
+import { safeReadFile } from "../src/sandbox.js";
+
+test("safeReadFile reads a small UTF-8 file and returns content + truncated:false", async () => {
+  const tmp = path.join(os.homedir(), `.throttle-mcp-test-${Date.now()}.txt`);
+  await fs.writeFile(tmp, "hello world");
+  try {
+    const r = await safeReadFile(tmp);
+    assert.equal(r.error, undefined);
+    assert.equal(r.content, "hello world");
+    assert.equal(r.truncated, false);
+    assert.equal(r.bytes, 11);
+  } finally {
+    await fs.unlink(tmp);
+  }
+});
+
+test("safeReadFile truncates files over 64 KB and flags truncated:true", async () => {
+  const tmp = path.join(os.homedir(), `.throttle-mcp-test-big-${Date.now()}.txt`);
+  const big = "x".repeat(70 * 1024);
+  await fs.writeFile(tmp, big);
+  try {
+    const r = await safeReadFile(tmp);
+    assert.equal(r.error, undefined);
+    assert.equal(r.truncated, true);
+    assert.equal(r.content.length, 64 * 1024);
+    assert.equal(r.bytes, 70 * 1024);
+  } finally {
+    await fs.unlink(tmp);
+  }
+});
+
+test("safeReadFile refuses paths outside home", async () => {
+  const r = await safeReadFile("/etc/hosts");
+  assert.equal(r.error, "outside_home");
+});
+
+test("safeReadFile refuses credential paths even inside home", async () => {
+  const r = await safeReadFile(path.join(os.homedir(), ".ssh", "id_ed25519"));
+  assert.equal(r.error, "credential_path_denied");
+});
+
+test("safeReadFile refuses non-UTF8 binaries", async () => {
+  const tmp = path.join(os.homedir(), `.throttle-mcp-test-bin-${Date.now()}.bin`);
+  await fs.writeFile(tmp, Buffer.from([0xC3, 0x28, 0xFF, 0xFE]));
+  try {
+    const r = await safeReadFile(tmp);
+    assert.equal(r.error, "binary_or_invalid_utf8");
+  } finally {
+    await fs.unlink(tmp);
+  }
+});
+
+test("safeReadFile returns error for missing files", async () => {
+  const r = await safeReadFile(path.join(os.homedir(), `.does-not-exist-${Date.now()}`));
+  assert.equal(r.error, "not_found");
+});
+
+test("safeReadFile rejects symlinks pointing outside home", async () => {
+  const inside = path.join(os.homedir(), `.throttle-mcp-link-${Date.now()}`);
+  await fs.symlink("/etc/hosts", inside);
+  try {
+    const r = await safeReadFile(inside);
+    assert.equal(r.error, "outside_home");
+  } finally {
+    await fs.unlink(inside);
+  }
+});
