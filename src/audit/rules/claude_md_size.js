@@ -12,7 +12,14 @@ export default {
   run(input) {
     const text = input?.rawText;
     if (typeof text !== "string") return null;
-    const bytes = Buffer.byteLength(text, "utf8");
+    // Prefer the on-disk byte count from the audit tool — when
+    // safeReadFile truncates content at 64 KB, Buffer.byteLength of the
+    // truncated rawText would understate the real file size and hide
+    // the worst offenders. Fall back to Buffer.byteLength when the tool
+    // doesn't pass `bytes` (rule unit tests, ad-hoc callers).
+    const bytes = typeof input?.bytes === "number"
+      ? input.bytes
+      : Buffer.byteLength(text, "utf8");
     if (bytes <= THRESHOLD_BYTES) return null;
     return {
       rule_id: "claude_md_size",
