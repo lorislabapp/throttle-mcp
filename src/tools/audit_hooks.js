@@ -26,7 +26,8 @@ export async function auditHooksTool({ dir: rawDir }) {
   }
   const hooksPresent = entries
     .filter(e => e.isFile() && e.name.endsWith(".sh"))
-    .map(e => e.name);
+    .map(e => e.name)
+    .sort();
 
   const findings = runRules(RULES, { dir: expanded, hooksPresent });
   return {
