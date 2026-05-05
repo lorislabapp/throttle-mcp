@@ -54,13 +54,13 @@ Every finding has the same shape:
 
 | `rule_id` | severity | mac_app_can_fix |
 |---|---|---|
-| `bash_wildcard` | high (security) | yes |
-| `read_write_wildcard` | high (security) | yes |
-| `curl_unscoped` | high (security) | yes |
-| `opus_default` | medium (cost) | yes |
+| `bash_wildcard` | high (security) | ✅ |
+| `read_write_wildcard` | high (security) | ✅ |
+| `curl_unscoped` | high (security) | ✅ |
+| `opus_default` | medium (cost) | ✅ |
 | `claude_md_size` | medium (cost) | — |
 | `claude_md_external_ref` | low (cost) | — |
-| `no_session_start_router` | medium (cost) | yes |
+| `no_session_start_router` | medium (cost) | ✅ |
 
 v0.2 will widen the ruleset based on real-world usage. PRs welcome.
 
