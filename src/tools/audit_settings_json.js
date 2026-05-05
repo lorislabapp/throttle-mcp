@@ -16,8 +16,10 @@ export async function auditSettingsJsonTool({ path }) {
   let parsed;
   try {
     parsed = JSON.parse(read.content);
-  } catch {
-    return { error: "parse_error" };
+  } catch (e) {
+    // Surface the parser message so the host (or Mac app) can compute
+    // a line/col from the byte offset Node embeds in the message.
+    return { error: "parse_error", detail: String(e?.message ?? e) };
   }
   const findings = runRules(RULES, {
     parsedJSON: parsed,
